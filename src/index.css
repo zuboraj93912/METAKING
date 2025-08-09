@@ -1,0 +1,179 @@
+@import url('./fonts/fonts.css');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Deep Ocean Blue Background */
+  --color-page-bg: #004D66;
+  --color-page-text: #FFFFFF;
+  --color-component-bg: #F0F4F8;
+  --color-component-text: #333D47;
+  --color-header-bg: #222B33;
+  
+  /* Primary Accent (Coral Orange) */
+  --color-primary-50: 255 247 237;
+  --color-primary-100: 255 237 213;
+  --color-primary-200: 254 215 170;
+  --color-primary-300: 253 186 116;
+  --color-primary-400: 252 146 80;
+  --color-primary-500: 255 127 80;
+  --color-primary-600: 235 107 60;
+  --color-primary-700: 215 87 40;
+  --color-primary-800: 195 67 20;
+  --color-primary-900: 175 47 0;
+}
+
+/* Utility classes */
+.bg-page {
+  background-color: var(--color-page-bg);
+}
+
+.text-page-text {
+  color: var(--color-page-text);
+}
+
+.text-page-text\/80 {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.text-page-text\/70 {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.bg-component {
+  background-color: var(--color-component-bg);
+}
+
+.bg-component\/80 {
+  background-color: rgba(240, 244, 248, 0.8);
+}
+
+.text-component {
+  color: var(--color-component-text);
+}
+
+.text-component-text {
+  color: var(--color-component-text);
+}
+
+.text-component-text\/70 {
+  color: rgba(51, 61, 71, 0.7);
+}
+
+.bg-header-bg {
+  background-color: var(--color-header-bg);
+}
+
+/* Custom slider styles - Clean standard linear with visible thumb */
+.slider {
+  background: #e5e7eb;
+  height: 10px;
+  border-radius: 5px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: rgb(var(--color-primary-500));
+  cursor: pointer;
+  border: 3px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.slider::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: rgb(var(--color-primary-500));
+  cursor: pointer;
+  border: 3px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.slider::-webkit-slider-track {
+  height: 10px;
+  border-radius: 5px;
+  background: #e5e7eb;
+}
+
+.slider::-moz-range-track {
+  height: 10px;
+  border-radius: 5px;
+  background: #e5e7eb;
+}
+
+/* Animation classes */
+@keyframes slideIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Hover effects */
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:scale-110:hover {
+  transform: scale(1.10);
+}
+
+.hover\:scale-115:hover {
+  transform: scale(1.15);
+}
+
+/* Border width utilities */
+.border-3 {
+  border-width: 3px;
+}
+
+/* Shadow utilities */
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Custom font for credit text */
+.font-higher-jump {
+  font-family: 'Higher Jump Regular', cursive;
+}
