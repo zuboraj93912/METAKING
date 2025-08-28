@@ -397,11 +397,15 @@ Keywords_Count_Max: ${maxKeywords}
 Description_Words_Min: ${minDescriptionWords}
 Description_Words_Max: ${maxDescriptionWords}
 ---
-TASK: Generate a Title, a list of comma-separated Keywords, and a Description for this image.
-The Title MUST have between ${minTitleWords} and ${maxTitleWords} words.
-The Keywords list MUST contain between ${minKeywords} and ${maxKeywords} keywords.
-The Description MUST have between ${minDescriptionWords} and ${maxDescriptionWords} words.
-(For Freepik Description, if these constraints result in an unsuitable description, output "N/A" for the DESCRIPTION_AI field).
+CRITICAL INSTRUCTIONS:
+1. Generate a COMPLETE, DESCRIPTIVE title for this image. Do NOT truncate or shorten your title response.
+2. The title should be between ${minTitleWords} and ${maxTitleWords} words and fully describe the image content.
+3. Generate a comprehensive list of ${minKeywords} to ${maxKeywords} relevant keywords for this image.
+4. Generate a description between ${minDescriptionWords} and ${maxDescriptionWords} words.
+5. Do NOT consider any user prefixes or suffixes - generate complete, standalone metadata.
+
+TASK: Analyze this image and generate complete metadata as specified above.
+
 OUTPUT_FORMAT (EXACTLY AS FOLLOWS, EACH ON A NEW LINE, NO EXTRA TEXT OR INTRODUCTIONS):
 TITLE_AI: [Generated Title Here]
 KEYWORDS_AI: [keyword1,keyword2,keyword3,...,keywordN]
@@ -427,39 +431,44 @@ const parseAndProcessApiResponse = (text: string, settings: any): PlatformMetada
     }
   }
   
-  // Apply title prefix if provided
+  // Apply title prefix if provided - prepend to AI-generated title
   if (settings.titlePrefix && settings.titlePrefix.trim()) {
-    title = `${settings.titlePrefix.trim()} ${title}`.trim();
+    const prefix = settings.titlePrefix.trim();
+    title = title ? `${prefix} ${title}` : prefix;
   }
   
-  // Apply keyword suffix if provided
+  // Apply keyword suffix if provided - append to AI-generated keywords
   if (settings.keywordSuffix && settings.keywordSuffix.trim()) {
     const suffixKeywords = settings.keywordSuffix
       .split(',')
       .map(k => k.trim())
       .filter(k => k);
-    keywords = [...keywords, ...suffixKeywords];
+    
+    // Append user keywords to AI-generated keywords
+    if (suffixKeywords.length > 0) {
+      keywords = [...keywords, ...suffixKeywords];
+    }
   }
   
   // Client-Side Post-Processing (Fallback if AI doesn't meet constraints)
   const targetMinKeywords = settings.minKeywords;
   const targetMaxKeywords = settings.maxKeywords;
   
-  // Keywords: If count > max, truncate to max
+  // Keywords: If total count (AI + user) > max, truncate to max
   if (keywords.length > targetMaxKeywords) {
     keywords = keywords.slice(0, targetMaxKeywords);
   }
   
-  // Title: If word count > max, truncate
+  // Title: If final title (prefix + AI) word count > max, truncate appropriately
   const titleWords = title.split(' ').filter(word => word.trim());
   if (titleWords.length > settings.maxTitleWords) {
-    title = titleWords.slice(0, settings.maxTitleWords).join(' ') + '...';
+    title = titleWords.slice(0, settings.maxTitleWords).join(' ');
   }
   
   // Description: If word count > max, truncate
   const descriptionWords = description.split(' ').filter(word => word.trim());
   if (descriptionWords.length > settings.maxDescriptionWords) {
-    description = descriptionWords.slice(0, settings.maxDescriptionWords).join(' ') + '...';
+    description = descriptionWords.slice(0, settings.maxDescriptionWords).join(' ');
   }
   
   return { title, keywords, description };
