@@ -26,6 +26,9 @@ export interface MetadataSettings {
   maxKeywords: number;
   minDescriptionWords: number;
   maxDescriptionWords: number;
+  titlePrefix: string;
+  keywordSuffix: string;
+  fileExtension: string;
 }
 
 export interface ApiKey {

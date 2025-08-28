@@ -33,6 +33,8 @@ This guide explains how to use METAKING to generate metadata for your JPG and PN
 
 2.  **Select Target Platform & Customize Metadata:**
     *   Use the "ACTIVE PLATFORM" selector (Adobe Stock, Shutterstock, or Freepik).
+    *   Customize your metadata with optional Title Prefix and Keyword Suffix fields.
+    *   Choose a file extension for CSV export (.eps, .svg, .ai, or keep original).
     *   Adjust the "Metadata Length Constraints" sliders as needed. The sliders control the Min/Max words for Title (default 8-15), Min/Max count for Keywords (default 40-45), and Min/Max words for Description (default 10-20). All sliders have an adjustable range of 5 to 50.
 
 3.  **Generate Metadata:**
@@ -48,6 +50,9 @@ This guide explains how to use METAKING to generate metadata for your JPG and PN
     *   Use this metadata when uploading your images to the respective microstock platforms.
 
 **Important Notes:**
+*   Title Prefix: Add custom text before AI-generated titles (optional).
+*   Keyword Suffix: Add custom keywords after AI-generated keywords (optional).
+*   File Extension: Change file extensions in CSV output for different formats.
 *   The AI analyzes the visual content of your JPG/PNG images to generate relevant metadata.
 *   Always review AI-generated metadata for accuracy and relevance.
 *   The system supports multiple API keys for redundancy - if one fails, it automatically switches to backup keys.

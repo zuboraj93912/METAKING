@@ -237,6 +237,19 @@ export const exportPlatformCSV = (files: FileItem[], platform: string) => {
     throw new Error(`No ${platform} metadata found to export`);
   }
 
+  // Get current settings for file extension
+  const settings = JSON.parse(localStorage.getItem('metaking-settings-v12') || '{}');
+  const fileExtension = settings.metadataSettings?.fileExtension || 'original';
+  
+  // Helper function to change file extension
+  const changeFileExtension = (filename: string): string => {
+    if (fileExtension === 'original') {
+      return filename;
+    }
+    const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
+    return `${nameWithoutExt}${fileExtension}`;
+  };
+
   let csvContent = '';
   let filename = '';
 
@@ -245,7 +258,7 @@ export const exportPlatformCSV = (files: FileItem[], platform: string) => {
       csvContent = generateCSV(
         ['Filename', 'Title', 'Keywords'],
         platformFiles.map(f => [
-          f.name,
+          changeFileExtension(f.name),
           f.metadata.adobestock!.title,
           f.metadata.adobestock!.keywords.join(',')
         ])
@@ -257,7 +270,7 @@ export const exportPlatformCSV = (files: FileItem[], platform: string) => {
       csvContent = generateCSV(
         ['File name', 'Title', 'Keywords', 'Prompt', 'Base-Model'],
         platformFiles.map(f => [
-          f.name,
+          changeFileExtension(f.name),
           f.metadata.freepik!.title,
           f.metadata.freepik!.keywords.join(';'),
           '',
@@ -272,7 +285,7 @@ export const exportPlatformCSV = (files: FileItem[], platform: string) => {
       csvContent = generateCSV(
         ['Filename', 'Description', 'Keywords'],
         platformFiles.map(f => [
-          f.name,
+          changeFileExtension(f.name),
           f.metadata.shutterstock!.description,
           f.metadata.shutterstock!.keywords.join(',')
         ])
@@ -412,6 +425,20 @@ const parseAndProcessApiResponse = (text: string, settings: any): PlatformMetada
     } else if (line.includes('DESCRIPTION_AI:')) {
       description = line.split('DESCRIPTION_AI:')[1]?.trim() || '';
     }
+  }
+  
+  // Apply title prefix if provided
+  if (settings.titlePrefix && settings.titlePrefix.trim()) {
+    title = `${settings.titlePrefix.trim()} ${title}`.trim();
+  }
+  
+  // Apply keyword suffix if provided
+  if (settings.keywordSuffix && settings.keywordSuffix.trim()) {
+    const suffixKeywords = settings.keywordSuffix
+      .split(',')
+      .map(k => k.trim())
+      .filter(k => k);
+    keywords = [...keywords, ...suffixKeywords];
   }
   
   // Client-Side Post-Processing (Fallback if AI doesn't meet constraints)
