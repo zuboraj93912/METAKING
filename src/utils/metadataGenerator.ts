@@ -397,14 +397,14 @@ Keywords_Count_Max: ${maxKeywords}
 Description_Words_Min: ${minDescriptionWords}
 Description_Words_Max: ${maxDescriptionWords}
 ---
-CRITICAL INSTRUCTIONS:
-1. Generate a COMPLETE, DESCRIPTIVE title for this image. Do NOT truncate or shorten your title response.
-2. The title should be between ${minTitleWords} and ${maxTitleWords} words and fully describe the image content.
-3. Generate a comprehensive list of ${minKeywords} to ${maxKeywords} relevant keywords for this image.
-4. Generate a description between ${minDescriptionWords} and ${maxDescriptionWords} words.
-5. Do NOT consider any user prefixes or suffixes - generate complete, standalone metadata.
+INSTRUCTIONS:
+1. Analyze this image carefully and generate a COMPLETE, DESCRIPTIVE title that fully describes what you see.
+2. The title should be between ${minTitleWords} and ${maxTitleWords} words.
+3. Generate a comprehensive list of ${minKeywords} to ${maxKeywords} relevant keywords that describe the image content, style, colors, objects, concepts, and themes.
+4. Generate a detailed description between ${minDescriptionWords} and ${maxDescriptionWords} words.
+5. Generate ONLY based on what you see in the image - do not include any external text or user inputs.
 
-TASK: Analyze this image and generate complete metadata as specified above.
+TASK: Analyze this image and provide complete metadata.
 
 OUTPUT_FORMAT (EXACTLY AS FOLLOWS, EACH ON A NEW LINE, NO EXTRA TEXT OR INTRODUCTIONS):
 TITLE_AI: [Generated Title Here]
@@ -431,41 +431,47 @@ const parseAndProcessApiResponse = (text: string, settings: any): PlatformMetada
     }
   }
   
-  // Apply title prefix if provided - prepend to AI-generated title
+  // Step 1: Apply title prefix if provided - prepend to AI-generated title
   if (settings.titlePrefix && settings.titlePrefix.trim()) {
     const prefix = settings.titlePrefix.trim();
     title = title ? `${prefix} ${title}` : prefix;
   }
   
-  // Apply keyword suffix if provided - append to AI-generated keywords
+  // Step 2: Apply keyword suffix if provided - append to AI-generated keywords as separate elements
   if (settings.keywordSuffix && settings.keywordSuffix.trim()) {
-    const suffixKeywords = settings.keywordSuffix
+    const userKeywords = settings.keywordSuffix
       .split(',')
       .map(k => k.trim())
       .filter(k => k);
     
-    // Append user keywords to AI-generated keywords
-    if (suffixKeywords.length > 0) {
-      keywords = [...keywords, ...suffixKeywords];
+    // Append user keywords as separate elements to AI-generated keywords
+    if (userKeywords.length > 0) {
+      // Remove duplicates by creating a Set and converting back to array
+      const combinedKeywords = [...keywords, ...userKeywords];
+      keywords = Array.from(new Set(combinedKeywords.map(k => k.toLowerCase())))
+        .map(k => {
+          // Find original case from combined list
+          return combinedKeywords.find(orig => orig.toLowerCase() === k) || k;
+        });
     }
   }
   
-  // Client-Side Post-Processing (Fallback if AI doesn't meet constraints)
+  // Step 3: Apply length constraints (post-processing)
   const targetMinKeywords = settings.minKeywords;
   const targetMaxKeywords = settings.maxKeywords;
   
-  // Keywords: If total count (AI + user) > max, truncate to max
+  // Keywords: If total count exceeds max, truncate to max (prioritizing AI keywords)
   if (keywords.length > targetMaxKeywords) {
     keywords = keywords.slice(0, targetMaxKeywords);
   }
   
-  // Title: If final title (prefix + AI) word count > max, truncate appropriately
+  // Title: If final title word count exceeds max, truncate while preserving meaning
   const titleWords = title.split(' ').filter(word => word.trim());
   if (titleWords.length > settings.maxTitleWords) {
     title = titleWords.slice(0, settings.maxTitleWords).join(' ');
   }
   
-  // Description: If word count > max, truncate
+  // Description: If word count exceeds max, truncate
   const descriptionWords = description.split(' ').filter(word => word.trim());
   if (descriptionWords.length > settings.maxDescriptionWords) {
     description = descriptionWords.slice(0, settings.maxDescriptionWords).join(' ');
