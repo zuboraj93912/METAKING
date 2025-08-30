@@ -389,7 +389,7 @@ const constructPrompt = (filename: string, platform: string, settings: any): str
   return `[[PROMPT_START]]
 PLATFORM: ${platform}
 IMAGE_FILENAME: ${filename}
-CONSTRAINTS_FOR_GENERATION (ADHERE STRICTLY TO THESE NUMBERS):
+AI_GENERATION_CONSTRAINTS (GENERATE CONTENT BASED ONLY ON THESE LIMITS - IGNORE ANY USER PREFIXES/SUFFIXES):
 Title_Words_Min: ${minTitleWords}
 Title_Words_Max: ${maxTitleWords}
 Keywords_Count_Min: ${minKeywords}
@@ -397,14 +397,15 @@ Keywords_Count_Max: ${maxKeywords}
 Description_Words_Min: ${minDescriptionWords}
 Description_Words_Max: ${maxDescriptionWords}
 ---
-INSTRUCTIONS:
-1. Analyze this image carefully and generate a COMPLETE, DESCRIPTIVE title that fully describes what you see.
-2. The title should be between ${minTitleWords} and ${maxTitleWords} words.
-3. Generate a comprehensive list of ${minKeywords} to ${maxKeywords} relevant keywords that describe the image content, style, colors, objects, concepts, and themes.
-4. Generate a detailed description between ${minDescriptionWords} and ${maxDescriptionWords} words.
-5. Generate ONLY based on what you see in the image - do not include any external text or user inputs.
+CRITICAL_INSTRUCTIONS:
+1. ANALYZE THE IMAGE ONLY - Do not consider any user-provided text, prefixes, or suffixes
+2. Generate a COMPLETE, DESCRIPTIVE title that is EXACTLY between ${minTitleWords} and ${maxTitleWords} words
+3. Generate EXACTLY between ${minKeywords} and ${maxKeywords} relevant keywords based solely on image content
+4. Generate a detailed description that is EXACTLY between ${minDescriptionWords} and ${maxDescriptionWords} words
+5. Your generated content will be processed separately from any user customizations
+6. Focus on image content: objects, colors, style, mood, composition, lighting, etc.
 
-TASK: Analyze this image and provide complete metadata.
+TASK: Generate standalone metadata for this image based only on visual analysis.
 
 OUTPUT_FORMAT (EXACTLY AS FOLLOWS, EACH ON A NEW LINE, NO EXTRA TEXT OR INTRODUCTIONS):
 TITLE_AI: [Generated Title Here]
@@ -420,6 +421,7 @@ const parseAndProcessApiResponse = (text: string, settings: any): PlatformMetada
   let keywords: string[] = [];
   let description = '';
   
+  // Step 1: Parse AI-generated content only
   for (const line of lines) {
     if (line.includes('TITLE_AI:')) {
       title = line.split('TITLE_AI:')[1]?.trim() || '';
@@ -431,51 +433,46 @@ const parseAndProcessApiResponse = (text: string, settings: any): PlatformMetada
     }
   }
   
-  // Step 1: Apply title prefix if provided - prepend to AI-generated title
+  // Step 2: Apply user customizations AFTER AI generation (client-side processing)
+  
+  // Apply title prefix - prepend to AI-generated title without affecting AI word count
   if (settings.titlePrefix && settings.titlePrefix.trim()) {
     const prefix = settings.titlePrefix.trim();
     title = title ? `${prefix} ${title}` : prefix;
   }
   
-  // Step 2: Apply keyword suffix if provided - append to AI-generated keywords as separate elements
+  // Apply keyword suffix - append to AI-generated keywords as separate elements
   if (settings.keywordSuffix && settings.keywordSuffix.trim()) {
     const userKeywords = settings.keywordSuffix
       .split(',')
       .map(k => k.trim())
       .filter(k => k);
     
-    // Append user keywords as separate elements to AI-generated keywords
+    // Append user keywords as separate elements (not counted in AI limits)
     if (userKeywords.length > 0) {
-      // Remove duplicates by creating a Set and converting back to array
       const combinedKeywords = [...keywords, ...userKeywords];
+      // Remove duplicates while preserving order (AI keywords first, then user keywords)
       keywords = Array.from(new Set(combinedKeywords.map(k => k.toLowerCase())))
         .map(k => {
-          // Find original case from combined list
           return combinedKeywords.find(orig => orig.toLowerCase() === k) || k;
         });
     }
   }
   
-  // Step 3: Apply length constraints (post-processing)
-  const targetMinKeywords = settings.minKeywords;
-  const targetMaxKeywords = settings.maxKeywords;
+  // Step 3: Apply constraints only to AI-generated content (before user additions)
+  // Note: User-provided content is NOT subject to AI generation limits
+  // The AI should have already generated content within the specified limits
+  // We only apply emergency truncation if AI exceeded limits (which shouldn't happen)
   
-  // Keywords: If total count exceeds max, truncate to max (prioritizing AI keywords)
-  if (keywords.length > targetMaxKeywords) {
-    keywords = keywords.slice(0, targetMaxKeywords);
-  }
-  
-  // Title: If final title word count exceeds max, truncate while preserving meaning
-  const titleWords = title.split(' ').filter(word => word.trim());
-  if (titleWords.length > settings.maxTitleWords) {
-    title = titleWords.slice(0, settings.maxTitleWords).join(' ');
-  }
-  
-  // Description: If word count exceeds max, truncate
+  // Emergency truncation for AI content only (should rarely be needed)
+  // Description: Only truncate if AI significantly exceeded limits
   const descriptionWords = description.split(' ').filter(word => word.trim());
-  if (descriptionWords.length > settings.maxDescriptionWords) {
+  if (descriptionWords.length > settings.maxDescriptionWords + 5) { // Allow 5 word buffer
     description = descriptionWords.slice(0, settings.maxDescriptionWords).join(' ');
   }
+  
+  // Note: We do NOT truncate the final title or keywords after user additions
+  // because user customizations should always be preserved
   
   return { title, keywords, description };
 };
